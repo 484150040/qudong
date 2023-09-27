@@ -1,0 +1,46 @@
+{
+  "driverId": "4b67a2b9-c615-42dc-9fc1-3f67073fb080",
+  "packageName": "com.isycores.driver",
+  "clzName": "AlarmhostsDriver",
+  "isSerial": false,
+  "useChannel": false,
+  "needConfig": false,
+  "functions": {
+    "isTsl": false,
+    "driverAttributes": [],
+    "driverEvents": [],
+    "driverServices": []
+  },
+  "driverConnectParams": [
+    {
+      "name":"接口地址",
+      "desc":"App Http Server Path",
+      "value":null
+    },
+    {
+      "name":"协议版本",
+      "desc":"version",
+      "value":null
+    },
+    {
+      "name":"账号",
+      "desc":"username",
+      "value":null
+    },
+    {
+      "name":"密码",
+      "desc":"password",
+      "value":null
+    },
+    {
+      "name":"客户端ID",
+      "desc":"clientId",
+      "value":null
+    },
+    {
+      "name":"客户端密钥",
+      "desc":"clientSecret",
+      "value":null
+    }
+  ]
+}

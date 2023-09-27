@@ -1,0 +1,33 @@
+{
+  "driverId": "668e47fc-d373-48b1-aec7-1e79831ade22",
+  "packageName": "com.isycores.driver",
+  "clzName": "InformationDriver",
+  "isSerial": false,
+  "useChannel": false,
+  "needConfig": false,
+  "functions": {
+    "isTsl": false,
+    "driverAttributes": [],
+    "driverEvents": [],
+    "driverServices": []
+  },
+  "driverConnectParams": [
+    {
+      "name": "接口地址",
+      "desc": "127.0.0.1",
+      "value": null
+    }, {
+      "name": "协议版本",
+      "desc": "1.0.0",
+      "value": null
+    }, {
+      "name": "APPKEY",
+      "desc": "APPKEY",
+      "value": null
+    }, {
+      "name": "username",
+      "desc": "username",
+      "value": null
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "driverId": "f6d194ec-6451-4e27-aa44-6372c5844fcd",
+  "packageName": "com.isycores.driver",
+  "clzName": "RotatingRingDriver",
+  "isSerial": false,
+  "useChannel": false,
+  "needConfig": false,
+  "functions": {
+    "isTsl": false,
+    "driverAttributes": [],
+    "driverEvents": [],
+    "driverServices": []
+  },
+  "driverConnectParams": [
+    {
+      "name": "接口地址",
+      "desc": "App Http Server Path",
+      "value": null
+    },
+    {
+      "name": "协议版本",
+      "desc": "version",
+      "value": null
+    },
+    {
+      "name": "端口",
+      "desc": "port",
+      "value": null
+    }
+  ]
+}
