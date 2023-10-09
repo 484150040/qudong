@@ -171,6 +171,12 @@ public class PatrolRecordDriver extends IEdgeDeviceDriverBase {
                     JSONArray data = datas.getJSONArray("pageData");
                     data.forEach( _item -> {
                         JSONObject item = (JSONObject)_item;
+                        String ip = resourceBundle.getString("jscip");
+                        try {
+                            sendPost("http://"+ip+"/cockpit/deviceChannel",item.toString(),new HashMap<>());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         TslEventAction action = new TslEventAction();
                         action.setDevId(device.devId);
                         action.setOutputs(new HashMap<>());

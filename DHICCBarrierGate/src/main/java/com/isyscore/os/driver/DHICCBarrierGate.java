@@ -298,7 +298,7 @@ public class DHICCBarrierGate extends IEdgeDeviceDriverBase {
     private void decodeMessageRealTimeRecord(Device device) throws Exception {
         String enterTimeStrLeft = getStartTime(date2String(new Date()));
         String enterTimeStrRight = getEndTime(date2String(new Date()));;
-        GeneralRequest request = new GeneralRequest("/evo-apigw/ipms/caraccess/find/his?pageSize=10&enterTimeStrLeft="+enterTimeStrLeft+"&enterTimeStrRight="+enterTimeStrRight+"&exitTimeStrLeft="+enterTimeStrLeft+"&exitTimeStrRight="+enterTimeStrRight, Method.GET);
+        GeneralRequest request = new GeneralRequest("/evo-apigw/ipms/caraccess/find/his?pageSize=1000&enterTimeStrLeft="+enterTimeStrLeft+"&enterTimeStrRight="+enterTimeStrRight+"&exitTimeStrLeft="+enterTimeStrLeft+"&exitTimeStrRight="+enterTimeStrRight, Method.GET);
         GeneralResponse response = daHualient.doAction(request,request.getResponseClass());
         if (response.isSuccess()) {
             JSONObject root = JSONObject.parseObject(response.getResult());
@@ -326,7 +326,7 @@ public class DHICCBarrierGate extends IEdgeDeviceDriverBase {
                                     resourceBundle=ResourceBundle.getBundle("application", Locale.CHINA);
                                     String ip = resourceBundle.getString("jscip");
                                     String car = sendGet("http://"+ip+"/cockpit/caraccess/"+extend.getString("id"),new HashMap<>());
-                                    if (json2map(car).get("data")!=null){
+                                    if (json2map(car).get("data")==null){
                                         String parm = extend.toString();
                                         sendPost("http://"+ip+"/cockpit/caraccess",parm,new HashMap<>());
                                         action.setDevId(device.devId);
@@ -378,11 +378,16 @@ public class DHICCBarrierGate extends IEdgeDeviceDriverBase {
         object.init(initialParam);
         Thread.sleep(1000 * 60);
         object.exit();*/
-       String channelId = "1003927$14$0$0".replace("1003927",(Integer.valueOf("1003927")+1)+"");
+       /*String channelId = "1003927$14$0$0".replace("1003927",(Integer.valueOf("1003927")+1)+"");
         System.out.println(channelId);
         IClient daHualient = new DefaultClient("172.17.1.2","kechuang","bf8093df-8c98-4a35-a349-cb527874d73a");
         GeneralRequest request = new GeneralRequest("/evo-apigw/ipms/subSystem/control/sluice", Method.POST,"{\"channelId\":\""+"1003927$14$0$0".replace("1003927",(Integer.valueOf("1003927")+1)+"")+"\",\"operateType\":"+1+"}");
         System.out.println(request.getBody());
-        GeneralResponse response = daHualient.doAction(request,request.getResponseClass());
+        GeneralResponse response = daHualient.doAction(request,request.getResponseClass());*/
+
+        String enterTimeStrLeft = getStartTime(date2String(new Date()));
+        String enterTimeStrRight = getEndTime(date2String(new Date()));
+        System.out.println(enterTimeStrLeft);
+        System.out.println(enterTimeStrRight);
     }
 }
