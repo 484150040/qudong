@@ -3,6 +3,7 @@ package com.isyscore.os.driver;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.dahuatech.hutool.http.Method;
+import com.dahuatech.hutool.json.JSONUtil;
 import com.dahuatech.icc.exception.ClientException;
 import com.dahuatech.icc.oauth.http.DefaultClient;
 import com.dahuatech.icc.oauth.http.IClient;
@@ -12,6 +13,7 @@ import com.isyscore.os.driver.core.driver.*;
 import com.isyscore.os.driver.core.iedge.IEdgeDeviceDriverBase;
 import com.isyscore.os.driver.utils.TimerHandle;
 import com.isyscore.os.driver.utils.TimerSchedules;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +28,7 @@ import static com.isyscore.os.driver.utils.HttpClientUtil.sendPost;
 public class PatrolRecordDriver extends IEdgeDeviceDriverBase {
 
 
-    private ResourceBundle resourceBundle;
+    private ResourceBundle resourceBundle = ResourceBundle.getBundle("application", Locale.CHINA);
     private static final Logger log = LoggerFactory.getLogger(PatrolRecordDriver.class);
     private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static class Device {
@@ -264,13 +266,32 @@ public class PatrolRecordDriver extends IEdgeDeviceDriverBase {
         object.init(initialParam);
         Thread.sleep(1000 * 60);
         object.exit();*/
-       /*String channelId = "1003927$14$0$0".replace("1003927",(Integer.valueOf("1003927")+1)+"");
-        System.out.println(channelId);
-        IClient daHualient = new DefaultClient("172.17.1.2","kechuang","bf8093df-8c98-4a35-a349-cb527874d73a");
-        GeneralRequest request = new GeneralRequest("/evo-apigw/ipms/subSystem/control/sluice", Method.POST,"{\"channelId\":\""+"1003927$14$0$0".replace("1003927",(Integer.valueOf("1003927")+1)+"")+"\",\"operateType\":"+1+"}");
-        System.out.println(request.getBody());
-        GeneralResponse response = daHualient.doAction(request,request.getResponseClass());*/
 
-        System.out.println(UUID.randomUUID());
+        IClient daHualient = new DefaultClient("172.17.1.2","kechuang","bf8093df-8c98-4a35-a349-cb527874d73a");
+        GeneralRequest request = new GeneralRequest("/evo-apigw/evo-accesscontrol/1.0.0/card/accessControl/doorAuthority/42623E8E", Method.POST,"{\"showInherit\":true}");
+        GeneralResponse response = daHualient.doAction(request,request.getResponseClass());
+
+
+        JSONObject root = JSONObject.parseObject(response.getResult());
+        JSONObject datas = root.getJSONObject("data");
+        JSONArray data = datas.getJSONArray("cardPrivilegeDetails");
+        List<Map<String,Object>> list = new ArrayList<>();
+        data.forEach( _item -> {
+                    JSONObject item = (JSONObject) _item;
+                   Map<String,Object> map = new HashMap<>();
+                   map.put("privilegeType",item.getString("privilegeType"));
+                   map.put("resouceCode",item.getString("resouceCode"));
+                   map.put("resourceName",item.getString("resourceName"));
+                    list.add(map);
+                });
+        Map<String,Object> map = new HashMap<>();
+
+        map.put("cardNumber","42623E8E");
+        map.put("cardPrivilegeDetails",list);
+
+        System.out.println(map.toString());
+        GeneralRequest request1 = new GeneralRequest("/evo-apigw/evo-accesscontrol/1.0.0/card/accessControl/doorAuthority/deleteSingleCardPrivilege", Method.POST, JSONUtil.toJsonStr(map));
+        GeneralResponse response1 = daHualient.doAction(request1,request1.getResponseClass());
+        System.out.println(response1);
     }
 }

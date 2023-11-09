@@ -25,7 +25,7 @@ import static com.isyscore.os.driver.utils.DateUtils.*;
 import static com.isyscore.os.driver.utils.HttpClientUtil.*;
 
 public class DHICCBarrierGate extends IEdgeDeviceDriverBase {
-    private ResourceBundle resourceBundle=ResourceBundle.getBundle("application", Locale.CHINA);;
+    private ResourceBundle resourceBundle=ResourceBundle.getBundle("application", Locale.CHINA);
     private static final Logger log = LoggerFactory.getLogger(DHICCBarrierGate.class);
     private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static class Device {

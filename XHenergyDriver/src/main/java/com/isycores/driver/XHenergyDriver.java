@@ -1,5 +1,6 @@
 package com.isycores.driver;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.internal.LinkedTreeMap;
 import com.isycores.driver.enums.EnergyEnum;
@@ -8,6 +9,7 @@ import com.isycores.driver.utils.TimerHandle;
 import com.isycores.driver.utils.TimerSchedules;
 import com.isyscore.os.driver.core.driver.*;
 import com.isyscore.os.driver.core.iedge.IEdgeDeviceDriverBase;
+import lombok.Data;
 import lombok.SneakyThrows;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -19,16 +21,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import static com.isycores.driver.utils.DateUtils.*;
 import static com.isycores.driver.utils.HttpClientUtil.*;
+import static com.isycores.driver.utils.MD5Encryption.convertMapToString;
+import static com.isycores.driver.utils.MD5Encryption.getSign;
 
 public class XHenergyDriver extends IEdgeDeviceDriverBase {
     private static final Logger log = LoggerFactory.getLogger(XHenergyDriver.class);
-
+    private ResourceBundle resourceBundle=ResourceBundle.getBundle("application", Locale.CHINA);
     //配置文件参数
     private String path = null;
     private String version = null;
@@ -49,6 +51,8 @@ public class XHenergyDriver extends IEdgeDeviceDriverBase {
         private Boolean online = false;
         private String devId;
         private String termId;
+        private List<String> zhnum;
+        private String jdId;
         private String devName;
     }
     public XHenergyDriver() {
@@ -84,6 +88,16 @@ public class XHenergyDriver extends IEdgeDeviceDriverBase {
             //在线状态
         }),1000,5 * 60 * 1000);
 
+        timerSchedules.register(new TimerHandle((timerHandle)->{
+            deviceIdMap.forEach((s, device) -> {
+                try {
+                    GetCbdata(device);
+                    GetJfData(device);
+                } catch (Exception e) {
+                    log.error(e.getMessage(),e);
+                }
+            });
+        }),1000,10 * 60 * 1000);
 
         timerSchedules.start();
         return 0;
@@ -185,7 +199,15 @@ public class XHenergyDriver extends IEdgeDeviceDriverBase {
                     device.toOnline = false;
                     //激活
                     device.online = false;
-                    device.termId = extra.getString("termId");
+                    if (!StringUtils.isEmpty(extra.getString("termId"))){
+                        device.termId = extra.getString("termId");
+                    }
+                    if (!StringUtils.isEmpty(extra.getString("zhnum"))){
+                        device.zhnum = extra.getJSONArray("zhnum");
+                    }
+                    if (!StringUtils.isEmpty(extra.getString("jdId"))){
+                        device.jdId = extra.getString("jdId");
+                    }
                     device.devName = deviceInfo.getDevName();
                     device.devId = deviceInfo.getDevId();
                     deviceIdMap.put(device.devId,device);
@@ -213,7 +235,9 @@ public class XHenergyDriver extends IEdgeDeviceDriverBase {
             action.setDevId(device.devId);
             action.getOutputs().put("devName",device.devName);
             try{
-                if (StringUtils.isEmpty(device.termId)){
+                if (!StringUtils.isEmpty(device.jdId)){
+                    YFDflowPath(device);
+                } else if (StringUtils.isEmpty(device.termId)){
                     XhflowPath(device,action);
                 }else {
                     YKTflowPath(device,action);
@@ -223,6 +247,25 @@ public class XHenergyDriver extends IEdgeDeviceDriverBase {
             }
             updateDeviceStatus(device,device.toOnline);
             listener.onEvent(action);
+        }
+    }
+
+    private void YFDflowPath(Device device) {
+        LinkedHashMap body = new LinkedHashMap<>();
+        body.put("nodeId",device.jdId);
+        body.put("timestamp","123456");
+        String str = getSign(body).toUpperCase();
+        body.put("sign",str);
+        try {
+            Map<String, String> header = new HashMap<>();
+            header.put("Content-Type","application/json");
+            String respese = sendPost("http://"+path+"/api/GetChildNode",convertMapToString(body),header);
+                List<String> maps = Collections.singletonList(respese);
+                if (!CollectionUtils.isEmpty(maps)){
+                    device.toOnline=true;
+                }
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -330,6 +373,152 @@ public class XHenergyDriver extends IEdgeDeviceDriverBase {
         listener.onEvent(action);
     }
 
+       /**
+     * 事件定义
+     *
+     * @param device
+     * @throws Exception
+     */
+    private void GetJfData(Device device) throws Exception {
+        String enterTimeStrLeft = getStartTime(date2String(getStartOfMonth(new Date())));
+        String enterTimeStrRight = getEndTime(date2String(getEndOfMonth(new Date())));
+        if (CollectionUtils.isEmpty(device.zhnum)) {
+            return;
+        }
+        JSONArray datas =new JSONArray();
+        for (String zhnums : device.zhnum) {
+            LinkedHashMap body = new LinkedHashMap<>();
+            body.put("startTime",enterTimeStrLeft);
+            body.put("endTime",enterTimeStrRight);
+            body.put("zhnum",zhnums);
+            body.put("timestamp","123456");
+            String str = getSign(body).toUpperCase();
+            body.put("sign",str);
+            Map<String, String> header = new HashMap<>();
+            header.put("Content-Type","application/json");
+            String resp = sendPost("http://"+path+"/api/GetJfData",convertMapToString(body),header);
+            if (resp.length()<=2){
+                continue;
+            }
+            JSONArray data = JSONArray.parseArray(resp);
+            if (!CollectionUtils.isEmpty(data)){
+                datas.addAll(data);
+            }
+        }
+        datas.forEach( _item -> {
+            JSONObject extend = (JSONObject) _item;
+            if (device != null) {
+                String pjcode = extend.getString("pjcode");
+                String jfje = extend.getString("jfje");
+                String dj = extend.getString("dj");
+                String bcye = extend.getString("bcye");
+                String zhnum = extend.getString("zhnum");
+                String gl = extend.getString("gl");
+                String usernm = extend.getString("usernm");
+                TslEventAction action = new TslEventAction();
+                try {
+                    resourceBundle = ResourceBundle.getBundle("application", Locale.CHINA);
+                    String ip = resourceBundle.getString("jscip");
+                    String car = sendGet("http://" + ip + "/cockpit/childnode/" + extend.getString("id"), new HashMap<>());
+                    if (json2map(car).get("data") == null) {
+                        String parm = extend.toString();
+                        sendPost("http://" + ip + "/cockpit/childnode", parm, new HashMap<>());
+                        action.setDevId(device.devId);
+                        action.setIdentifier("Jf");
+                        action.setOutputs(new HashMap<>());
+                        action.getOutputs().put("devName", device.devName);
+                        action.getOutputs().put("pjcode", pjcode);
+                        action.getOutputs().put("jfje", jfje);
+                        action.getOutputs().put("dj", dj);
+                        action.getOutputs().put("bcye", bcye);
+                        action.getOutputs().put("zhnum", zhnum);
+                        action.getOutputs().put("gl", gl);
+                        action.getOutputs().put("usernm", usernm);
+                        listener.onEvent(action);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
+     * 事件定义
+     *
+     * @param device
+     * @throws Exception
+     */
+    private void GetCbdata(Device device) throws Exception {
+        String enterTimeStrLeft = getStartTime(date2String(getStartOfMonth(new Date())));
+        String enterTimeStrRight = getEndTime(date2String(getEndOfMonth(new Date())));
+        if (CollectionUtils.isEmpty(device.zhnum)) {
+            return;
+        }
+        JSONArray datas = new JSONArray();
+        for (String zhnums : device.zhnum) {
+            LinkedHashMap body = new LinkedHashMap<>();
+            body.put("zhnum",zhnums);
+            body.put("timestamp","123456");
+            body.put("StartDate",enterTimeStrLeft);
+            body.put("EndDate",enterTimeStrRight);
+            body.put("blxTag","0");
+            String str = getSign(body).toUpperCase();
+            body.put("sign",str);
+            Map<String, String> header = new HashMap<>();
+            header.put("Content-Type","application/json");
+            String resp = sendPost("http://"+path+"/api/GetCbdata",convertMapToString(body),header);
+            if (resp.length()<=2){
+                return;
+            }
+            JSONArray data = JSONArray.parseArray(resp);
+            if (!CollectionUtils.isEmpty(data)){
+                datas.addAll(data);
+            }
+
+        }
+        datas.forEach( _item -> {
+            JSONObject extend = (JSONObject) _item;
+            if (device != null) {
+                String xm = extend.getString("姓名");
+                String mph = extend.getString("门牌号");
+                String zz = extend.getString("住址");
+                String cbz = extend.getString("抄表值");
+                Long cbrq = extend.getLong("抄表日期");
+                String cbfs = extend.getString("抄表方式");
+                TslEventAction action = new TslEventAction();
+                try {
+                    resourceBundle = ResourceBundle.getBundle("application", Locale.CHINA);
+                    String ip = resourceBundle.getString("jscip");
+                    JSONObject ext = new JSONObject();
+                    ext.put("xm",xm);
+                    ext.put("mph",mph);
+                    ext.put("zz",zz);
+                    ext.put("cbz",cbz);
+                    ext.put("cbrq",cbrq);
+                    ext.put("cbfs",cbfs);
+                    String parm = ext.toString();
+                    sendPost("http://" + ip + "/cockpit/cbdata", parm, new HashMap<>());
+                    action.setDevId(device.devId);
+                    action.setIdentifier("Cb");
+                    action.setOutputs(new HashMap<>());
+                    action.getOutputs().put("devName", device.devName);
+                    action.getOutputs().put("xm", xm);
+                    action.getOutputs().put("mph", mph);
+                    action.getOutputs().put("zz", zz);
+                    action.getOutputs().put("cbz", cbz);
+                    action.getOutputs().put("cbrq", cbrq);
+                    action.getOutputs().put("cbfs", cbfs);
+                    listener.onEvent(action);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+    }
+
+
     public static void main(String[] args) throws Exception {
        /* XHenergyDriver object = new XHenergyDriver();
         BootStrapManager.init(1,10);
@@ -340,6 +529,5 @@ public class XHenergyDriver extends IEdgeDeviceDriverBase {
         object.init(null);
         Thread.sleep(1000*60);
         object.exit();*/
-
     }
 }

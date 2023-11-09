@@ -37,7 +37,7 @@ public class DHiccDriver extends IEdgeDeviceDriverBase {
     private Map<String, Device> deviceIdMap = new HashMap<>();
     private Map<String, Device> channelMap = new HashMap<>();
     private Map<String, Device> parkZoneMap = new HashMap<>();
-    private TimerSchedules timerSchedules = new TimerSchedules(1110);
+    private TimerSchedules timerSchedules = new TimerSchedules(1000);
 
     /**
      * 设备相关配置

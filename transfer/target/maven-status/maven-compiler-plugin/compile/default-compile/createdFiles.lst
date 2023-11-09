@@ -1,0 +1,6 @@
+com\cn\job\enums\Urlenum.class
+com\cn\job\controller\TransferController.class
+com\cn\job\service\TransferServiceimpl.class
+com\cn\job\TransferApplication.class
+com\cn\job\util\HttpClientUtil$1.class
+com\cn\job\util\HttpClientUtil.class
