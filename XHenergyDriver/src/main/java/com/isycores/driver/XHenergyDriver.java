@@ -455,7 +455,7 @@ public class XHenergyDriver extends IEdgeDeviceDriverBase {
         if (CollectionUtils.isEmpty(device.zhnum)) {
             return;
         }
-        JSONArray datas = new JSONArray();
+        List<Map<String,Object>> datas = new ArrayList<>();
         for (String zhnums : device.zhnum) {
             LinkedHashMap body = new LinkedHashMap<>();
             body.put("zhnum",zhnums);
@@ -469,14 +469,16 @@ public class XHenergyDriver extends IEdgeDeviceDriverBase {
             header.put("Content-Type","application/json");
             String resp = sendPost("http://"+path+"/api/GetCbdata",convertMapToString(body),header);
             if (resp.length()<=2){
-                return;
+                continue;
             }
-            JSONArray data = JSONArray.parseArray(resp);
+            List<Map<String,Object>> data = JSONArray.parseArray(resp);
+
             if (!CollectionUtils.isEmpty(data)){
                 datas.addAll(data);
             }
 
         }
+
         datas.forEach( _item -> {
             JSONObject extend = (JSONObject) _item;
             if (device != null) {
@@ -497,6 +499,8 @@ public class XHenergyDriver extends IEdgeDeviceDriverBase {
                     ext.put("cbz",cbz);
                     ext.put("cbrq",cbrq);
                     ext.put("cbfs",cbfs);
+                    ext.put("id",zz+cbrq);
+
                     String parm = ext.toString();
                     sendPost("http://" + ip + "/cockpit/cbdata", parm, new HashMap<>());
                     action.setDevId(device.devId);
@@ -529,5 +533,20 @@ public class XHenergyDriver extends IEdgeDeviceDriverBase {
         object.init(null);
         Thread.sleep(1000*60);
         object.exit();*/
+        String enterTimeStrLeft = getStartTime(date2String(getStartOfMonth(new Date())));
+        String enterTimeStrRight = getEndTime(date2String(getEndOfMonth(new Date())));
+        LinkedHashMap body = new LinkedHashMap<>();
+        body.put("zhnum","00200002");
+        body.put("timestamp","123456");
+        body.put("StartDate",enterTimeStrLeft);
+        body.put("EndDate",enterTimeStrRight);
+        body.put("blxTag","0");
+        String str = getSign(body).toUpperCase();
+        body.put("sign",str);
+        Map<String, String> header = new HashMap<>();
+        header.put("Content-Type","application/json");
+        String resp = sendPost("http://172.18.127.81:81/api/GetCbdata",convertMapToString(body),header);
+        JSONArray data = JSONArray.parseArray(resp);
+        System.out.println(data);
     }
 }

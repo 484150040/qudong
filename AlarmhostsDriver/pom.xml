@@ -41,6 +41,12 @@
 			<artifactId>java-sdk-brm</artifactId>
 			<version>${icc.sdk.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.dahuatech.icc</groupId>
+			<artifactId>java-sdk-oauth</artifactId>
+			<version>${icc.sdk.version}</version>
+		</dependency>
+
 		<!-- ICC 事件中心sdk -->
 		<dependency>
 			<groupId>com.dahuatech.icc</groupId>

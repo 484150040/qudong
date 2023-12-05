@@ -12,6 +12,7 @@ import com.google.gson.reflect.TypeToken;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Component
@@ -66,6 +67,7 @@ public class DHhttpCleentUtil {
     public String get(String url, String param, IClient iClient) throws ClientException {
         GeneralRequest generalRequest =
                 new GeneralRequest(url, Method.GET);
+
         generalRequest.get(generalRequest.getUrl() + "/" + param);
         GeneralResponse subscribeResponse =
                 iClient.doAction(generalRequest, generalRequest.getResponseClass());

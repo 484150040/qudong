@@ -1,9 +1,12 @@
 package com.isycores.driver;
 
 import com.alibaba.fastjson.JSONObject;
+import com.dahuatech.hutool.http.Method;
 import com.dahuatech.icc.exception.ClientException;
 import com.dahuatech.icc.oauth.http.DefaultClient;
 import com.dahuatech.icc.oauth.http.IClient;
+import com.dahuatech.icc.oauth.model.v202010.GeneralRequest;
+import com.dahuatech.icc.oauth.model.v202010.GeneralResponse;
 import com.isycores.driver.utils.BootStrapManager;
 import com.isycores.driver.utils.DHhttpCleentUtil;
 import com.isycores.driver.utils.TimerHandle;
@@ -163,7 +166,7 @@ public class AlarmhostsDriver extends IEdgeDeviceDriverBase {
     @SneakyThrows
     private void getToken() {
         try {
-            daHualient = new DefaultClient(host, username, password, clientId, clientSecret);
+            daHualient = new DefaultClient(host, clientId, clientSecret);
         } catch (ClientException e) {
             return;
         }
@@ -297,7 +300,7 @@ public class AlarmhostsDriver extends IEdgeDeviceDriverBase {
 
         }
         try {
-            daHualient = new DefaultClient(host, username, password, clientId, clientSecret);
+            daHualient = new DefaultClient(host, clientId, clientSecret);
         } catch (ClientException e) {
             return -1;
         }
@@ -357,7 +360,7 @@ public class AlarmhostsDriver extends IEdgeDeviceDriverBase {
     }
 
     public static void main(String[] args) throws Exception {
-        AlarmhostsDriver object = new AlarmhostsDriver();
+        /*AlarmhostsDriver object = new AlarmhostsDriver();
         BootStrapManager.init(1, 10);
         object.host = "172.17.1.2";
         object.version = "1.0.0";
@@ -370,7 +373,16 @@ public class AlarmhostsDriver extends IEdgeDeviceDriverBase {
         Thread.sleep(1000 * 60);
         object.exit();
 
-        System.out.println(UUID.randomUUID());
+        System.out.println(UUID.randomUUID());*/
+        DHhttpCleentUtil dHhttpCleentUtil = new DHhttpCleentUtil();
+        IClient daHualient = new DefaultClient("172.17.1.2", "kechuang", "bf8093df-8c98-4a35-a349-cb527874d73a");
+
+
+        GeneralRequest request = new GeneralRequest("/evo-apigw/evo-alarm/1.0.0/alarmhosts/one/1004199", Method.GET);
+
+        GeneralResponse response = daHualient.doAction(request,request.getResponseClass());
+        String data = dHhttpCleentUtil.get("/evo-apigw/evo-alarm/1.0.0/alarmhosts/one/1004199" , new HashMap<>(), daHualient);
+        System.out.println(data);
      /*   String json = "{\"success\":true,\"data\":{\"value\":[{\"subsystemId\":\"1001901$25$0$0\",\"subSystemName\":\"子系统1\",\"status\":2,\"defenceAreaList\":[{\"defenceAreaId\":\"1001901$3$0$16\",\"defenceAreaName\":\"BJ-R1-1F-01红外\",\"status\":2,\"isOnline\":1,\"byPass\":0,\"defenceAreaType\":2},{\"defenceAreaId\":\"1001901$3$0$17\",\"defenceAreaName\":\"无障碍厕所手报\",\"status\":2,\"isOnline\":1,\"byPass\":0,\"defenceAreaType\":2},{\"defenceAreaId\":\"1001901$3$0$18\",\"defenceAreaName\":\"BJ_R1-1F-04红外\",\"status\":2,\"isOnline\":1,\"byPass\":0,\"defenceAreaType\":2},{\"defenceAreaId\":\"1001901$3$0$19\",\"defenceAreaName\":\"BJ-R1-1F-05红外\",\"status\":2,\"isOnline\":1,\"byPass\":0,\"defenceAreaType\":2},{\"defenceAreaId\":\"1001901$3$0$20\",\"defenceAreaName\":\"BJ-R1-1F-06红外\",\"status\":2,\"isOnline\":1,\"byPass\":0,\"defenceAreaType\":2},{\"defenceAreaId\":\"1001901$3$0$21\",\"defenceAreaName\":\"BJ-R1-1F-07红外\",\"status\":2,\"isOnline\":1,\"byPass\":0,\"defenceAreaType\":2},{\"defenceAreaId\":\"1001901$3$0$22\",\"defenceAreaName\":\"BJ-R1-1F-08红外\",\"status\":2,\"isOnline\":1,\"byPass\":0,\"defenceAreaType\":2},{\"defenceAreaId\":\"1001901$3$0$23\",\"defenceAreaName\":\"BJ-R1-1F-09红外\",\"status\":2,\"isOnline\":1,\"byPass\":0,\"defenceAreaType\":2}]}]},\"code\":\"0\",\"errMsg\":\"\"}\n";
         Map<String, Object> map = (Map<String, Object>) json2map(json).get("data");
         List<Map<String,Object>> islist = (List<Map<String, Object>>) map.get("value");

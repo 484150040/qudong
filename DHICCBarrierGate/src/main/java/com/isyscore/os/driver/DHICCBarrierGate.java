@@ -137,10 +137,52 @@ public class DHICCBarrierGate extends IEdgeDeviceDriverBase {
                     log.error(e.getMessage(),e);
                 }
             });
+        }),0, 5 * 60 * 1000);
+
+
+        timerSchedules.register(new TimerHandle(timerHandle -> {
+            devIdMap.forEach((s, device) -> {
+                try {
+                    carcapture(device);
+                } catch (Exception e) {
+                    log.error(e.getMessage(),e);
+                }
+            });
         }),0, 2 * 60 * 1000);
         timerSchedules.start();
         return 0;
     }
+
+    private void carcapture(Device device) throws ClientException {
+//        IClient daHualient = new DefaultClient("172.17.1.160","kechuangcar","ab9bb2a1-8303-4f09-9b20-08bccd7ke30d1");
+
+        String queryTimeBegin = getStartTime(date2String(new Date()));
+        String queryTimeEnd = getEndTime(date2String(new Date()));
+        StringBuffer stringBuffer = new StringBuffer();
+        stringBuffer.append(device.devOldId);
+        stringBuffer.append("$1$0$0");
+        GeneralRequest request = new GeneralRequest("/evo-apigw/ipms/carcapture/find/conditions?pageNum=1&pageSize=10000&queryTimeBegin="+queryTimeBegin+"&queryTimeEnd="+queryTimeEnd+"&carDirect=&devChnId="+stringBuffer.toString()+"&ownerName=&carNumLikeStr=", Method.GET);
+        GeneralResponse response = daHualient.doAction(request,request.getResponseClass());
+        if (response.isSuccess()) {
+            JSONObject root = JSONObject.parseObject(response.getResult());
+            if (root != null) {
+                if (root.getBoolean("success") != null && root.getBoolean("success").equals(true)) {
+                    JSONObject datas = root.getJSONObject("data");
+                    JSONArray data = datas.getJSONArray("pageData");
+                    data.forEach( _item -> {
+                        JSONObject extend = (JSONObject)_item;
+                        try {
+                            String ip = resourceBundle.getString("jscip");
+                            sendPost("http://"+ip+"/cockpit/carcapture",extend.toString(),new HashMap<>());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                }
+            }
+        }
+    }
+
     @Override
     public int exit() {
         timerSchedules.stop();
@@ -385,9 +427,25 @@ public class DHICCBarrierGate extends IEdgeDeviceDriverBase {
         System.out.println(request.getBody());
         GeneralResponse response = daHualient.doAction(request,request.getResponseClass());*/
 
-        String enterTimeStrLeft = getStartTime(date2String(new Date()));
-        String enterTimeStrRight = getEndTime(date2String(new Date()));
-        System.out.println(enterTimeStrLeft);
-        System.out.println(enterTimeStrRight);
+        IClient daHualient = new DefaultClient("172.17.1.160","kechuangcar","ab9bb2a1-8303-4f09-9b20-08bccd7e30d1");
+
+        String queryTimeBegin = getStartTime(date2String(new Date()));
+        String queryTimeEnd = getEndTime(date2String(new Date()));;
+        GeneralRequest request = new GeneralRequest("/evo-apigw/ipms/carcapture/find/conditions?pageSize=10000&queryTimeBegin="+queryTimeBegin+"&queryTimeEnd="+queryTimeEnd+"&carDirect=&devChnId=&ownerName=&carNumLikeStr=", Method.GET);
+        GeneralResponse response = daHualient.doAction(request,request.getResponseClass());
+        if (response.isSuccess()) {
+            JSONObject root = JSONObject.parseObject(response.getResult());
+            if (root != null) {
+                if (root.getBoolean("success") != null && root.getBoolean("success").equals(true)) {
+                    JSONObject datas = root.getJSONObject("data");
+                    JSONArray data = datas.getJSONArray("pageData");
+                    data.forEach( _item -> {
+                        JSONObject extend = (JSONObject)_item;
+                        String ip ="172.17.6.101:8181";
+                        System.out.println(extend);
+                    });
+                }
+            }
+        }
     }
 }
